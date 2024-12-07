@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Reverser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0097B2; /* Light teal background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative; /* Set relative positioning for the body */
+        }
+
+        .logo {
+            position: absolute; /* Absolute positioning for the logo */
+            top: 20px; /* Distance from the top */
+            left: 20px; /* Distance from the left */
+            width: 150px; /* Set a width for the logo */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        h1 {
+            font-weight: bold;
+            font-size: xx-large;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+        }
+
+        /* Style for the file input */
+        input[type="file"] {
+            display: none; /* Hide default file input */
+        }
+
+        .file-upload-btn {
+            background-color: #4a9b9b; /* Darker teal color */
+            color: white;
+            border: none;
+            padding: 10px 20px; /* Add padding for a button-like appearance */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 10px 0; /* Space above button */
+            width: 100%; /* Full width button */
+        }
+
+        .file-upload-btn:hover {
+            background-color: #3e8787; /* Darker teal on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        .file-upload-btn:active {
+            transform: scale(0.95); /* Slightly shrink on click */
+        }
+
+        button {
+            background-color: #64b6b6; /* Light teal color */
+            color: white;
+            border: none;
+            padding: 12px 20px; /* Increased padding for larger buttons */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px; /* Larger font size */
+            transition: background-color 0.3s, transform 0.3s;
+            margin-top: 10px; /* Space above button */
+            width: 100%; /* Full width button */
+        }
+
+        button:hover {
+            background-color: #4a9b9b; /* Darker teal on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        button:active {
+            transform: scale(0.95); /* Slightly shrink on click */
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        video {
+            margin-top: 10px;
+            border: 2px solid #64b6b6; /* Light teal border for the video */
+            border-radius: 8px;
+            width: 100%; /* Responsive */
+            max-width: 600px; /* Limit max width */
+        }
+
+        /* Loading spinner */
+        .loader {
+            border: 5px solid rgba(255, 255, 255, 0.5); /* Light border */
+            border-top: 5px solid #4a9b9b; /* Darker teal color */
+            border-radius: 50%; /* Circular shape */
+            width: 50px; /* Width of the spinner */
+            height: 50px; /* Height of the spinner */
+            animation: spin 1s linear infinite; /* Spin animation */
+            margin-top: 10px; /* Space above the spinner */
+            display: none; /* Initially hidden */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="/static/assets/lazylearning.png" alt="Logo" width="100%"> <!-- Replace with your logo -->
+    </div>
+    <h1>Upload a Video to Reverse</h1>
+    <form id="upload-form">
+        <label class="file-upload-btn" style="height: 100%; width: 80%; display: flex; align-items: center; justify-content: center;">
+            <p style="font-size: x-large; font-weight: bold;">Choose File</p>
+            <input type="file" name="video" accept="video/*" required>
+        </label>
+        <button type="submit">Upload and Reverse</button>
+        <div class="loader" id="loading-spinner"></div> <!-- Loading Spinner -->
+    </form>
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('upload-form').onsubmit = function(event) {
+            event.preventDefault(); // Prevent the default form submission
+            
+            const formData = new FormData(this);
+            const loader = document.getElementById('loading-spinner');
+            loader.style.display = 'block'; // Show the loading spinner
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process-video', true);
+
+            xhr.onload = function() {
+                loader.style.display = 'none'; // Hide the loading spinner after processing
+                if (xhr.status === 200) {
+                    const blob = new Blob([xhr.response], { type: 'video/mp4' });
+                    const url = window.URL.createObjectURL(blob);
+                    const resultDiv = document.getElementById('result');
+
+                    // Clear previous results
+                    resultDiv.innerHTML = '';
+
+                    // Create video element to play the reversed video
+                    const videoElement = document.createElement('video');
+                    videoElement.controls = true;
+                    videoElement.src = url;
+                    videoElement.width = 600; // Optional: set width of video
+                    resultDiv.appendChild(videoElement);
+                } else {
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+
+            xhr.onerror = function() {
+                loader.style.display = 'none'; // Hide loading spinner on error
+                alert("An error occurred during the transaction.");
+            };
+
+            xhr.responseType = 'blob'; // Expect a Blob response
+            xhr.send(formData); // Send the request with form data
+        };
+    </script>
+</body>
+</html>
